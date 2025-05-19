@@ -10,6 +10,7 @@ interface ActivityItem {
 }
 
 export function RecentActivity() {
+  // For new users, we just show the login activity
   const activities: ActivityItem[] = [
     {
       icon: <UserPlus className="text-blue-500 dark:text-blue-400" />,
@@ -17,27 +18,6 @@ export function RecentActivity() {
       iconColor: "text-blue-500 dark:text-blue-400",
       title: "You logged in to the system",
       time: "Just now",
-    },
-    {
-      icon: <PlusCircle className="text-green-500 dark:text-green-400" />,
-      iconBg: "bg-green-100 dark:bg-green-900/30",
-      iconColor: "text-green-500 dark:text-green-400",
-      title: "Added 15 new Laptop Stand units",
-      time: "2 hours ago",
-    },
-    {
-      icon: <LineChart className="text-purple-500 dark:text-purple-400" />,
-      iconBg: "bg-purple-100 dark:bg-purple-900/30",
-      iconColor: "text-purple-500 dark:text-purple-400",
-      title: "Updated demand prediction for Office Supplies",
-      time: "Yesterday",
-    },
-    {
-      icon: <AlertCircle className="text-red-500 dark:text-red-400" />,
-      iconBg: "bg-red-100 dark:bg-red-900/30",
-      iconColor: "text-red-500 dark:text-red-400",
-      title: "Low stock alert for Monitors",
-      time: "2 days ago",
     },
   ];
 

@@ -23,14 +23,17 @@ export default function Dashboard() {
   const totalItems = items.length;
   const lowStockItems = items.filter(item => item.status === "danger").length;
   const totalStock = items.reduce((sum, item) => sum + item.stock, 0);
+  
+  // Calculate stock value without random values for consistency
   const stockValue = items.reduce((sum, item) => {
-    // Simulate random prices for demonstration
-    const randomPrice = Math.floor(Math.random() * 50) + 10;
-    return sum + (item.stock * randomPrice);
+    // Use threshold as a base price (more realistic than random)
+    const estimatedPrice = item.threshold * 2;
+    return sum + (item.stock * estimatedPrice);
   }, 0);
 
-  // Get unique categories count
-  const uniqueCategories = new Set(items.map(item => item.category)).size;
+  // Get unique categories count (or 0 for new users)
+  const uniqueCategories = items.length > 0 ? 
+    new Set(items.map(item => item.category)).size : 0;
 
   if (isLoading) {
     return (

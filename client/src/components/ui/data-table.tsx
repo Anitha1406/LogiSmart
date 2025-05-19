@@ -83,7 +83,7 @@ export function DataTable<T>({
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All categories</SelectItem>
+              <SelectItem value="all">All categories</SelectItem>
               {filterOptions.map((option) => (
                 <SelectItem key={option} value={option}>
                   {option}
