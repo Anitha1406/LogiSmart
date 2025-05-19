@@ -2,6 +2,173 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Visual enhancements for the inventory management app */
+
+/* Animated gradient background for the whole app */
+.app-background {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+  min-height: 100vh;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Glass effect for cards */
+.glass-card {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+/* Card hover effects */
+.hover-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Button animations */
+.pulse-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.pulse-button:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+.pulse-button:hover:after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(20, 20);
+    opacity: 0;
+  }
+}
+
+/* Chart animations */
+.animate-chart {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* For when new items are added to lists */
+.list-item-appear {
+  animation: fadeIn 0.5s forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Progress bar animations */
+.animated-progress .progress-bar {
+  transition: width 1s ease-in-out;
+}
+
+/* Subtle wave background for dashboard */
+.wave-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.wave-background:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230099ff' fill-opacity='0.05' d='M0,288L48,272C96,256,192,224,288,208C384,192,480,192,576,202.7C672,213,768,235,864,229.3C960,224,1056,192,1152,176C1248,160,1344,160,1392,160L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: bottom;
+  opacity: 0.1;
+  z-index: -1;
+}
+
+/* Dashboard stat cards with gradient backgrounds */
+.stat-card-primary {
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  color: white;
+}
+
+.stat-card-success {
+  background: linear-gradient(135deg, #2fd887, #38ef7d);
+  color: white;
+}
+
+.stat-card-warning {
+  background: linear-gradient(135deg, #fcb045, #fd1d1d);
+  color: white;
+}
+
+.stat-card-info {
+  background: linear-gradient(135deg, #17ead9, #6078ea);
+  color: white;
+}
+
+/* Dark mode enhancements */
+.dark .glass-card {
+  background: rgba(30, 30, 30, 0.5);
+  border: 1px solid rgba(60, 60, 60, 0.18);
+}
+
+.dark .stat-card-primary,
+.dark .stat-card-success,
+.dark .stat-card-warning,
+.dark .stat-card-info {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
 :root {
       --background: 0 0% 100%;
 --foreground: 20 14.3% 4.1%;

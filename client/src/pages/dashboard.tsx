@@ -24,11 +24,10 @@ export default function Dashboard() {
   const lowStockItems = items.filter(item => item.status === "danger").length;
   const totalStock = items.reduce((sum, item) => sum + item.stock, 0);
   
-  // Calculate stock value without random values for consistency
+  // Calculate stock value using the actual price data
   const stockValue = items.reduce((sum, item) => {
-    // Use threshold as a base price (more realistic than random)
-    const estimatedPrice = item.threshold * 2;
-    return sum + (item.stock * estimatedPrice);
+    // Use the actual price field
+    return sum + (item.stock * item.price);
   }, 0);
 
   // Get unique categories count (or 0 for new users)
@@ -53,41 +52,44 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 wave-background">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title="Total Inventory Items"
           value={totalItems}
           description={`Across ${uniqueCategories} categories`}
           icon={<Archive className="h-5 w-5" />}
+          variant="primary"
         />
         <StatsCard
           title="Low Stock Alerts"
           value={lowStockItems}
           description="Items below threshold"
           icon={<AlertTriangle className="h-5 w-5" />}
-          iconColor="text-error-500"
+          variant="warning"
         />
         <StatsCard
           title="Total Stock Quantity"
           value={totalStock}
           description="Units in inventory"
           icon={<Package className="h-5 w-5" />}
-          iconColor="text-secondary-500"
+          variant="info"
         />
         <StatsCard
           title="Estimated Value"
           value={formatCurrency(stockValue)}
           description="Total inventory value"
           icon={<DollarSign className="h-5 w-5" />}
-          iconColor="text-accent-500"
+          variant="success"
         />
       </div>
 
       <AlertsSection />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <RecentActivity />
+        <div className="lg:col-span-2">
+          <RecentActivity />
+        </div>
         <CategorySummary />
       </div>
     </div>

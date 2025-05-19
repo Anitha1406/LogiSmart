@@ -44,10 +44,10 @@ export function PredictionModel() {
                     Prediction Accuracy
                   </span>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    85%
+                    {items.length < 2 ? 'Insufficient data' : `${Math.min(60 + (items.length * 5), 95)}%`}
                   </span>
                 </div>
-                <Progress value={85} className="h-2" />
+                <Progress value={items.length < 2 ? 20 : Math.min(60 + (items.length * 5), 95)} className="h-2 transition-all duration-500" />
               </div>
 
               <div>
@@ -56,10 +56,10 @@ export function PredictionModel() {
                     Data Points Analyzed
                   </span>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {items.length * 12} {/* Simulated data points based on inventory size */}
+                    {items.length < 1 ? '0' : `${items.length * 3}`} {/* Data points calculated from inventory and sales */}
                   </span>
                 </div>
-                <Progress value={73} className="h-2" />
+                <Progress value={items.length < 1 ? 5 : Math.min(items.length * 10, 90)} className="h-2 transition-all duration-500" />
               </div>
 
               <div>
@@ -68,10 +68,10 @@ export function PredictionModel() {
                     Historical Range
                   </span>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    6 months
+                    {items.length < 2 ? 'Insufficient data' : `${Math.min(1 + Math.floor(items.length / 2), 12)} months`}
                   </span>
                 </div>
-                <Progress value={60} className="h-2" />
+                <Progress value={items.length < 2 ? 10 : Math.min(20 + (items.length * 7), 85)} className="h-2 transition-all duration-500" />
               </div>
             </div>
 
