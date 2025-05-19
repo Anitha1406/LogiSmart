@@ -221,7 +221,9 @@ export function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
                     <Input type="number" min="0" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Minimum stock level before alerts are triggered
+                    Minimum stock level before alerts are triggered. For new products without sales history, 
+                    you need to set this manually. After recording at least 2 sales, the prediction model 
+                    will automatically calculate optimal thresholds based on your sales patterns.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

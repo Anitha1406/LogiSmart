@@ -161,7 +161,9 @@ export function SalesEntryForm({ open, onOpenChange }: SalesEntryFormProps) {
         <DialogHeader>
           <DialogTitle>Record Sale</DialogTitle>
           <DialogDescription>
-            Record a sale to update inventory and improve demand predictions.
+            Record a sale to update inventory and improve demand predictions. Recording sales data is essential 
+            for the system to learn your business patterns and automatically predict optimal stock levels. 
+            The prediction model requires at least 2 sales per item to start generating accurate forecasts.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
