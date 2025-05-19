@@ -44,6 +44,9 @@ const itemFormSchema = z.object({
   stock: z.coerce.number().int().min(0, {
     message: "Stock must be a positive number.",
   }),
+  price: z.coerce.number().min(0, {
+    message: "Price must be a positive number.",
+  }),
   threshold: z.coerce.number().int().min(0, {
     message: "Threshold must be a positive number.",
   }),
@@ -179,6 +182,28 @@ export function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
                   <FormControl>
                     <Input type="number" min="0" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Unit Price</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      min="0" 
+                      step="0.01"
+                      placeholder="0.00" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Price per unit for inventory valuation
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

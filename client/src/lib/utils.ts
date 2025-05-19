@@ -13,6 +13,7 @@ export type InventoryItemType = {
   category: string;
   stock: number;
   threshold: number;
+  price: number;
   demand: number;
   status: Status;
   userId: string;
