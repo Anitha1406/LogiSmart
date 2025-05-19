@@ -39,6 +39,7 @@ export function useInventory() {
               name: data.name,
               category: data.category,
               stock: data.stock,
+              price: data.price || 0,
               threshold: data.threshold,
               demand: data.demand || 0,
               status: data.status,

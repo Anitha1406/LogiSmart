@@ -73,6 +73,7 @@ export function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
       name: "",
       category: "",
       stock: 0,
+      price: 0,
       threshold: 0,
       demand: undefined,
     },
@@ -91,6 +92,7 @@ export function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
     try {
       const stock = values.stock;
       const threshold = values.threshold;
+      const price = values.price;
       // If demand is not provided, set it to 20% more than the threshold
       const demand = values.demand ?? Math.ceil(threshold * 1.2);
       
@@ -100,6 +102,7 @@ export function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
         name: values.name,
         category: values.category,
         stock,
+        price,
         threshold,
         demand,
         status,
