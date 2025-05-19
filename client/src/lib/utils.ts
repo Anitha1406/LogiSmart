@@ -11,12 +11,13 @@ export type InventoryItemType = {
   id: number | string;
   name: string;
   category: string;
-  stock: number;
-  threshold: number;
-  price: number;
-  demand: number;
+  quantity: number;
+  reorderPoint: number;
+  unit: string;
   status: Status;
   userId: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type CategoryCount = {
@@ -24,13 +25,14 @@ export type CategoryCount = {
   count: number;
 };
 
-export function calculateItemStatus(stock: number, threshold: number, demand: number): Status {
-  if (stock <= threshold) {
+export function calculateItemStatus(quantity: number, reorderPoint: number): Status {
+  if (quantity <= reorderPoint) {
     return 'danger';
-  } else if (stock <= demand) {
+  } else if (quantity <= reorderPoint * 1.5) {
     return 'warning';
+  } else {
+    return 'normal';
   }
-  return 'normal';
 }
 
 export function formatCurrency(value: number): string {
@@ -52,12 +54,3 @@ export function getStatusBadgeColor(status: Status) {
       return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
   }
 }
-
-export const DEFAULT_CATEGORIES = [
-  'Electronics',
-  'Office Supplies',
-  'Furniture',
-  'Kitchen',
-  'Tools',
-  'Other'
-];

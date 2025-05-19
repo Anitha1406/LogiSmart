@@ -8,7 +8,7 @@ import {
   insertSalesHistorySchema,
   insertCategoryThresholdSchema 
 } from "@shared/schema";
-import { predictDemand } from "./services/prediction";
+import { predictDemand, getPredictionAccuracy } from "./services/prediction";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users API
@@ -140,28 +140,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/predict-demand", async (req, res) => {
     try {
       const schema = z.object({
-        itemId: z.number(),
         userId: z.string(),
-        category: z.string()
       });
-      
-      const { itemId, userId, category } = schema.parse(req.body);
-      
-      const salesHistory = await storage.getSalesHistoryByItemId(itemId, userId);
-      const item = await storage.getInventoryItem(itemId);
-      
-      if (!item) {
-        return res.status(404).json({ message: "Item not found" });
+      const { userId } = schema.parse(req.body);
+
+      // Get all items for the user
+      const items = await storage.getInventoryItemsByUserId(userId);
+      // Group items by category
+      const categories = Array.from(new Set(items.map(item => item.category)));
+      const results = [];
+
+      for (const category of categories) {
+        const categoryItems = items.filter(item => item.category === category);
+        // Aggregate sales history for all items in this category
+        let salesHistory: any[] = [];
+        for (const item of categoryItems) {
+          const itemSales = await storage.getSalesHistoryByItemId(item.id, userId);
+          salesHistory = salesHistory.concat(itemSales);
+        }
+        // Sort sales by date
+        salesHistory.sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime());
+        // Use the model for prediction and metrics
+        let predictedQuantity: number | null = null;
+        let mae: number | null = null;
+        let rmse: number | null = null;
+        let mape: number | null = null;
+        let accuracy: number | null = null;
+        let last3: { month: number; actual: number; predicted: number | null }[] = [];
+        if (salesHistory.length >= 4) {
+          const model = new (require('./services/random-forest').RandomForestRegressor)();
+          await model.train(salesHistory, category);
+          predictedQuantity = await model.predict(salesHistory, category);
+          const metrics = await model.evaluate(salesHistory, category);
+          mae = metrics.mae;
+          rmse = metrics.rmse;
+          mape = metrics.mape;
+          accuracy = 100 - metrics.mape;
+          // Last 3 months comparison
+          const sortedSales = salesHistory.slice(-3);
+          last3 = sortedSales.map((sale, i) => ({
+            month: i + 1,
+            actual: sale.quantity,
+            predicted: predictedQuantity // For demo, use predictedQuantity (can be improved)
+          }));
+        }
+        results.push({
+          category,
+          predictedQuantity,
+          mae,
+          rmse,
+          mape,
+          accuracy,
+          last3
+        });
       }
-      
-      const predictedDemand = await predictDemand(salesHistory, category);
-      
-      // Update the item with the new predicted demand
-      const updatedItem = await storage.updateInventoryItem(itemId, {
-        demand: predictedDemand
+      res.json({ results });
+    } catch (error) {
+      res.status(400).json({ message: error instanceof Error ? error.message : "Invalid request" });
+    }
+  });
+
+  app.get("/api/predictions/accuracy", async (req, res) => {
+    try {
+      const schema = z.object({
+        itemId: z.string().transform(Number),
+        userId: z.string()
       });
       
-      res.json({ item: updatedItem, predictedDemand });
+      const { itemId, userId } = schema.parse(req.query);
+      
+      const metrics = await getPredictionAccuracy(itemId, userId);
+      res.json(metrics);
     } catch (error) {
       res.status(400).json({ message: error instanceof Error ? error.message : "Invalid request" });
     }

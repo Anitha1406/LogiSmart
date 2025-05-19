@@ -39,7 +39,7 @@ export default function Analytics() {
   }, {} as Record<string, typeof items>);
 
   for (const [category, categoryItems] of Object.entries(categoryGroups)) {
-    const totalStock = categoryItems.reduce((sum, item) => sum + item.stock, 0);
+    const totalStock = categoryItems.reduce((sum, item) => sum + item.quantity, 0);
     stockByCategoryData.push({ name: category, value: totalStock });
   }
 
@@ -48,7 +48,7 @@ export default function Analytics() {
   
   if (items.length > 0) {
     // Get unique categories
-    const uniqueCategories = [...new Set(items.map(item => item.category))];
+    const uniqueCategories = Array.from(new Set(items.map(item => item.category)));
     
     // Get months for the last 6 months
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -65,7 +65,7 @@ export default function Analytics() {
       uniqueCategories.forEach(category => {
         // Calculate a value based on current inventory
         const categoryItems = items.filter(item => item.category === category);
-        const totalValue = categoryItems.reduce((sum, item) => sum + item.stock, 0);
+        const totalValue = categoryItems.reduce((sum, item) => sum + item.quantity, 0);
         
         // Add some variation for historical data (decrease by 0-20% for older months)
         const variationFactor = 1 - (i * 0.04) + (Math.random() * 0.06);

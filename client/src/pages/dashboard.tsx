@@ -22,17 +22,11 @@ export default function Dashboard() {
   // Calculate dashboard stats
   const totalItems = items.length;
   const lowStockItems = items.filter(item => item.status === "danger").length;
-  const totalStock = items.reduce((sum, item) => sum + item.stock, 0);
-  
-  // Calculate stock value using the actual price data
-  const stockValue = items.reduce((sum, item) => {
-    // Use the actual price field
-    return sum + (item.stock * item.price);
-  }, 0);
+  const totalStock = items.reduce((sum, item) => sum + item.quantity, 0);
 
   // Get unique categories count (or 0 for new users)
   const uniqueCategories = items.length > 0 ? 
-    new Set(items.map(item => item.category)).size : 0;
+    Array.from(new Set(items.map(item => item.category))).length : 0;
 
   if (isLoading) {
     return (
@@ -76,10 +70,10 @@ export default function Dashboard() {
           variant="info"
         />
         <StatsCard
-          title="Estimated Value"
-          value={formatCurrency(stockValue)}
-          description="Total inventory value"
-          icon={<DollarSign className="h-5 w-5" />}
+          title="Total Categories"
+          value={uniqueCategories}
+          description="Unique product categories"
+          icon={<Layers className="h-5 w-5" />}
           variant="success"
         />
       </div>

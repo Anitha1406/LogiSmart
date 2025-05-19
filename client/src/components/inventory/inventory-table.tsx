@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useInventory } from "@/hooks/use-inventory";
-import { DEFAULT_CATEGORIES, getStatusBadgeColor, Status } from "@/lib/utils";
+import { getStatusBadgeColor, Status, type InventoryItemType } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
@@ -20,7 +20,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function InventoryTable() {
   const { items, isLoading, deleteItem } = useInventory();
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<string | number | null>(null);
+
+  console.log('Inventory items:', items);
 
   const handleDelete = async () => {
     if (itemToDelete !== null) {
@@ -39,21 +41,21 @@ export function InventoryTable() {
       accessorKey: "category",
     },
     {
-      header: "Stock",
-      accessorKey: "stock",
+      header: "Quantity",
+      accessorKey: "quantity",
+    },
+    {
+      header: "Unit",
+      accessorKey: "unit",
     },
     {
       header: "Threshold",
-      accessorKey: "threshold",
-    },
-    {
-      header: "Predicted Demand",
-      accessorKey: "demand",
+      accessorKey: "reorderPoint",
     },
     {
       header: "Status",
       accessorKey: "status",
-      cell: (row: any) => {
+      cell: (row: InventoryItemType) => {
         const status = row.status as Status;
         const statusText = 
           status === 'normal' ? 'Healthy' : 
@@ -72,7 +74,7 @@ export function InventoryTable() {
     {
       header: "Actions",
       accessorKey: "id",
-      cell: (row: any) => (
+      cell: (row: InventoryItemType) => (
         <div className="flex justify-end space-x-2">
           <Button variant="ghost" size="icon">
             <Pencil className="h-4 w-4 text-primary" />
@@ -110,7 +112,11 @@ export function InventoryTable() {
         </div>
       ),
     },
-  ];
+  ] as {
+    header: string;
+    accessorKey: keyof InventoryItemType;
+    cell?: (row: InventoryItemType) => React.ReactNode;
+  }[];
 
   if (isLoading) {
     return (
@@ -146,7 +152,7 @@ export function InventoryTable() {
       columns={columns}
       searchKey="name"
       filterKey="category"
-      filterOptions={DEFAULT_CATEGORIES}
+      filterOptions={Array.from(new Set(items.map(item => item.category)))}
     />
   );
 }

@@ -14,32 +14,40 @@ export default function Predictions() {
   
   // Prepare forecast data for the table based on actual user inventory
   // If user has no items, we show default categories with empty values
-  const categoryForecasts = hasInventoryData ? 
+  const categoryForecasts = hasInventoryData ?
     // If user has items, calculate real forecasts based on their data
     [
       {
-        category: "Electronics",
-        currentStock: items.filter(item => item.category === "Electronics").reduce((sum, item) => sum + item.stock, 0),
-        forecast30: items.filter(item => item.category === "Electronics").reduce((sum, item) => sum + Math.ceil(item.threshold * 1.2), 0),
-        forecast90: items.filter(item => item.category === "Electronics").reduce((sum, item) => sum + Math.ceil(item.threshold * 2.5), 0),
+        category: "Living Room",
+        currentStock: items.filter(item => item.category === "Living Room").reduce((sum, item) => sum + item.quantity, 0),
+        forecast30: items.filter(item => item.category === "Living Room").reduce((sum, item) => sum + Math.ceil(item.reorderPoint * 1.2), 0),
+        forecast90: items.filter(item => item.category === "Living Room").reduce((sum, item) => sum + Math.ceil(item.reorderPoint * 2.5), 0),
         confidence: "High (85%)",
         confidenceLevel: "high"
       },
       {
-        category: "Office Supplies",
-        currentStock: items.filter(item => item.category === "Office Supplies").reduce((sum, item) => sum + item.stock, 0),
-        forecast30: items.filter(item => item.category === "Office Supplies").reduce((sum, item) => sum + Math.ceil(item.threshold * 1.1), 0),
-        forecast90: items.filter(item => item.category === "Office Supplies").reduce((sum, item) => sum + Math.ceil(item.threshold * 2.2), 0),
+        category: "Bedroom",
+        currentStock: items.filter(item => item.category === "Bedroom").reduce((sum, item) => sum + item.quantity, 0),
+        forecast30: items.filter(item => item.category === "Bedroom").reduce((sum, item) => sum + Math.ceil(item.reorderPoint * 1.1), 0),
+        forecast90: items.filter(item => item.category === "Bedroom").reduce((sum, item) => sum + Math.ceil(item.reorderPoint * 2.2), 0),
         confidence: "High (82%)",
         confidenceLevel: "high"
       },
       {
-        category: "Furniture",
-        currentStock: items.filter(item => item.category === "Furniture").reduce((sum, item) => sum + item.stock, 0),
-        forecast30: items.filter(item => item.category === "Furniture").reduce((sum, item) => sum + Math.ceil(item.threshold * 0.8), 0),
-        forecast90: items.filter(item => item.category === "Furniture").reduce((sum, item) => sum + Math.ceil(item.threshold * 1.8), 0),
+        category: "Dining Room",
+        currentStock: items.filter(item => item.category === "Dining Room").reduce((sum, item) => sum + item.quantity, 0),
+        forecast30: items.filter(item => item.category === "Dining Room").reduce((sum, item) => sum + Math.ceil(item.reorderPoint * 0.8), 0),
+        forecast90: items.filter(item => item.category === "Dining Room").reduce((sum, item) => sum + Math.ceil(item.reorderPoint * 1.8), 0),
         confidence: "Medium (75%)",
         confidenceLevel: "medium"
+      },
+      {
+        category: "Office",
+        currentStock: items.filter(item => item.category === "Office").reduce((sum, item) => sum + item.quantity, 0),
+        forecast30: items.filter(item => item.category === "Office").reduce((sum, item) => sum + Math.ceil(item.reorderPoint * 1.0), 0),
+        forecast90: items.filter(item => item.category === "Office").reduce((sum, item) => sum + Math.ceil(item.reorderPoint * 2.0), 0),
+        confidence: "High (80%)",
+        confidenceLevel: "high"
       }
     ].filter(forecast => forecast.currentStock > 0) : // Only show categories with items
     // For new users, return empty array

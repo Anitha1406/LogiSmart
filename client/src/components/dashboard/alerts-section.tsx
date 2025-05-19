@@ -1,22 +1,12 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useInventory } from "@/hooks/use-inventory";
 import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 export function AlertsSection() {
   const { items } = useInventory();
-  const { toast } = useToast();
 
   const lowStockItems = items.filter((item) => item.status === "danger");
   const warningItems = items.filter((item) => item.status === "warning");
-
-  const handleRestock = (itemName: string) => {
-    toast({
-      title: "Restock Order Placed",
-      description: `Restocking order initiated for ${itemName}`,
-    });
-  };
 
   return (
     <Card>
@@ -36,7 +26,7 @@ export function AlertsSection() {
             {lowStockItems.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between p-4 mb-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 rounded-lg"
+                className="flex items-center p-4 mb-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 rounded-lg"
               >
                 <div className="flex items-center">
                   <div className="bg-red-100 dark:bg-red-800 p-2 rounded-full">
@@ -48,24 +38,18 @@ export function AlertsSection() {
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Current stock:{" "}
-                      <span className="font-medium text-red-500">{item.stock}</span> (below
-                      threshold of {item.threshold})
+                      <span className="font-medium text-red-500">{item.quantity}</span> (below
+                      threshold of {item.reorderPoint})
                     </p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={() => handleRestock(item.name)}
-                >
-                  Restock
-                </Button>
               </div>
             ))}
 
             {warningItems.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between p-4 mb-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/30 rounded-lg"
+                className="flex items-center p-4 mb-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/30 rounded-lg"
               >
                 <div className="flex items-center">
                   <div className="bg-yellow-100 dark:bg-yellow-800 p-2 rounded-full">
@@ -77,19 +61,11 @@ export function AlertsSection() {
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Current stock:{" "}
-                      <span className="font-medium text-yellow-500">
-                        {item.stock}
-                      </span>{" "}
-                      (below predicted demand of {item.demand})
+                      <span className="font-medium text-yellow-500">{item.quantity}</span> (approaching
+                      threshold of {item.reorderPoint})
                     </p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={() => handleRestock(item.name)}
-                >
-                  Restock
-                </Button>
               </div>
             ))}
           </div>

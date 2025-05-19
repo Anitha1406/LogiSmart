@@ -7,7 +7,9 @@ import {
   type SalesHistory,
   type InsertSalesHistory,
   type CategoryThreshold,
-  type InsertCategoryThreshold
+  type InsertCategoryThreshold,
+  type Prediction,
+  type InsertPrediction
 } from "@shared/schema";
 
 export interface IStorage {
@@ -33,6 +35,13 @@ export interface IStorage {
   getAllCategoryThresholds(): Promise<CategoryThreshold[]>;
   getCategoryThresholdByCategory(category: string): Promise<CategoryThreshold | undefined>;
   createCategoryThreshold(threshold: InsertCategoryThreshold): Promise<CategoryThreshold>;
+
+  // Prediction methods
+  getPredictionsByItemId(itemId: number, userId: string): Promise<Prediction[]>;
+  getPredictionsByUserId(userId: string): Promise<Prediction[]>;
+  createPrediction(prediction: InsertPrediction): Promise<Prediction>;
+  updatePrediction(id: number, actualQuantity: number): Promise<Prediction | undefined>;
+  calculatePredictionMetrics(predictions: Prediction[]): Promise<{ mae: number; rmse: number; mape: number } | null>;
 }
 
 export class MemStorage implements IStorage {
@@ -40,28 +49,30 @@ export class MemStorage implements IStorage {
   private inventoryItems: Map<number, InventoryItem>;
   private salesHistory: Map<number, SalesHistory>;
   private categoryThresholds: Map<number, CategoryThreshold>;
+  private predictions: Map<number, Prediction>;
   private currentUserId: number;
   private currentItemId: number;
   private currentSalesId: number;
   private currentThresholdId: number;
+  private currentPredictionId: number;
 
   constructor() {
     this.users = new Map();
     this.inventoryItems = new Map();
     this.salesHistory = new Map();
     this.categoryThresholds = new Map();
+    this.predictions = new Map();
     this.currentUserId = 1;
     this.currentItemId = 1;
     this.currentSalesId = 1;
     this.currentThresholdId = 1;
+    this.currentPredictionId = 1;
     
     // Initialize with default categories
-    this.createCategoryThreshold({ category: 'Electronics', defaultThreshold: 5 });
-    this.createCategoryThreshold({ category: 'Office Supplies', defaultThreshold: 10 });
-    this.createCategoryThreshold({ category: 'Furniture', defaultThreshold: 3 });
-    this.createCategoryThreshold({ category: 'Kitchen', defaultThreshold: 8 });
-    this.createCategoryThreshold({ category: 'Tools', defaultThreshold: 5 });
-    this.createCategoryThreshold({ category: 'Other', defaultThreshold: 5 });
+    this.createCategoryThreshold({ category: 'Living Room', defaultThreshold: 5 });
+    this.createCategoryThreshold({ category: 'Bedroom', defaultThreshold: 10 });
+    this.createCategoryThreshold({ category: 'Dining Room', defaultThreshold: 3 });
+    this.createCategoryThreshold({ category: 'Office', defaultThreshold: 8 });
   }
 
   // User management methods
@@ -76,7 +87,6 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    // This is here for compatibility but not used with Firebase auth
     return Array.from(this.users.values()).find(
       (user) => user.email === username,
     );
@@ -105,8 +115,9 @@ export class MemStorage implements IStorage {
     const now = new Date();
     const inventoryItem: InventoryItem = { 
       ...item, 
-      id, 
-      demand: item.demand || null,
+      id,
+      notes: item.notes ?? null,
+      demand: item.demand ?? null,
       createdAt: now,
       updatedAt: now
     };
@@ -174,6 +185,91 @@ export class MemStorage implements IStorage {
     };
     this.categoryThresholds.set(id, categoryThreshold);
     return categoryThreshold;
+  }
+
+  // Prediction methods
+  async getPredictionsByItemId(itemId: number, userId: string): Promise<Prediction[]> {
+    return Array.from(this.predictions.values()).filter(
+      (prediction) => prediction.itemId === itemId && prediction.userId === userId
+    );
+  }
+
+  async getPredictionsByUserId(userId: string): Promise<Prediction[]> {
+    return Array.from(this.predictions.values()).filter(
+      (prediction) => prediction.userId === userId
+    );
+  }
+
+  async createPrediction(prediction: InsertPrediction): Promise<Prediction> {
+    const id = this.currentPredictionId++;
+    const now = new Date();
+    const newPrediction: Prediction = {
+      ...prediction,
+      id,
+      predictionDate: now,
+      actualQuantity: null,
+      accuracy: null,
+      mae: null,
+      rmse: null,
+      mape: null,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.predictions.set(id, newPrediction);
+    return newPrediction;
+  }
+
+  async updatePrediction(id: number, actualQuantity: number): Promise<Prediction | undefined> {
+    const prediction = this.predictions.get(id);
+    if (!prediction) return undefined;
+
+    const updatedPrediction: Prediction = {
+      ...prediction,
+      actualQuantity,
+      updatedAt: new Date()
+    };
+
+    // Calculate accuracy metrics
+    const metrics = await this.calculatePredictionMetrics([updatedPrediction]);
+    if (metrics) {
+      updatedPrediction.mae = metrics.mae;
+      updatedPrediction.rmse = metrics.rmse;
+      updatedPrediction.mape = metrics.mape;
+      updatedPrediction.accuracy = 100 - metrics.mape; // Convert MAPE to accuracy percentage
+    } else {
+      // If no metrics available, set all to null
+      updatedPrediction.mae = null;
+      updatedPrediction.rmse = null;
+      updatedPrediction.mape = null;
+      updatedPrediction.accuracy = null;
+    }
+
+    this.predictions.set(id, updatedPrediction);
+    return updatedPrediction;
+  }
+
+  async calculatePredictionMetrics(predictions: Prediction[]): Promise<{ mae: number; rmse: number; mape: number } | null> {
+    const validPredictions = predictions.filter(p => p.actualQuantity !== null);
+    if (validPredictions.length === 0) {
+      return null; // Return null instead of zeros when no data
+    }
+
+    // Calculate Mean Absolute Error (MAE)
+    const mae = validPredictions.reduce((sum, p) => 
+      sum + Math.abs((p.actualQuantity || 0) - p.predictedQuantity), 0) / validPredictions.length;
+
+    // Calculate Root Mean Square Error (RMSE)
+    const rmse = Math.sqrt(validPredictions.reduce((sum, p) => 
+      sum + Math.pow((p.actualQuantity || 0) - p.predictedQuantity, 2), 0) / validPredictions.length);
+
+    // Calculate Mean Absolute Percentage Error (MAPE)
+    const mape = validPredictions.reduce((sum, p) => {
+      const actual = p.actualQuantity || 0;
+      if (actual === 0) return sum;
+      return sum + Math.abs((actual - p.predictedQuantity) / actual);
+    }, 0) * 100 / validPredictions.length;
+
+    return { mae, rmse, mape };
   }
 }
 

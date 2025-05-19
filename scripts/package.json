@@ -1,0 +1,14 @@
+{
+  "name": "logismart-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for LogiSmart data management",
+  "main": "seed-data.ts",
+  "scripts": {
+    "seed": "ts-node seed-data.ts"
+  },
+  "dependencies": {
+    "firebase": "^10.8.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+} 

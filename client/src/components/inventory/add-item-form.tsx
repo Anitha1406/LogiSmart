@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { DEFAULT_CATEGORIES, calculateItemStatus } from "@/lib/utils";
+import { calculateItemStatus } from "@/lib/utils";
 import { useInventory } from "@/hooks/use-inventory";
 import {
   Dialog,
@@ -34,29 +34,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
-const itemFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Product name must be at least 2 characters.",
-  }),
-  category: z.string().min(1, {
-    message: "Please select a category.",
-  }),
-  stock: z.coerce.number().int().min(0, {
-    message: "Stock must be a positive number.",
-  }),
-  price: z.coerce.number().min(0, {
-    message: "Price must be a positive number.",
-  }),
-  threshold: z.coerce.number().int().min(0, {
-    message: "Threshold must be a positive number.",
-  }),
-  demand: z.coerce.number().int().min(0, {
-    message: "Demand must be a positive number.",
-  }).optional(),
-});
-
-type ItemFormValues = z.infer<typeof itemFormSchema>;
-
 interface AddItemFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -65,69 +42,72 @@ interface AddItemFormProps {
 export function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { addItem } = useInventory();
+  const { addItem, categories } = useInventory();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<ItemFormValues>({
-    resolver: zodResolver(itemFormSchema),
+  const formSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    category: z.string().min(1, "Category is required"),
+    quantity: z.coerce.number().min(0, "Quantity must be 0 or greater"),
+    reorderPoint: z.coerce.number().min(0, "Reorder point must be 0 or greater"),
+    unit: z.string().min(1, "Unit is required"),
+  });
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       category: "",
-      stock: 0,
-      price: 0,
-      threshold: 0,
-      demand: undefined,
+      quantity: 0,
+      reorderPoint: 0,
+      unit: "",
     },
   });
 
-  const onSubmit = async (values: ItemFormValues) => {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
       toast({
         title: "Error",
-        description: "You must be logged in to add items.",
+        description: "You must be logged in to add items",
         variant: "destructive",
       });
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      const stock = values.stock;
-      const threshold = values.threshold;
-      const price = values.price;
-      // If demand is not provided, set it to 20% more than the threshold
-      const demand = values.demand ?? Math.ceil(threshold * 1.2);
-      
-      const status = calculateItemStatus(stock, threshold, demand);
-
-      await addItem({
-        name: values.name,
-        category: values.category,
-        stock,
-        price,
-        threshold,
-        demand,
-        status,
+      console.log('Form values before submission:', values);
+      const newItem = {
+        ...values,
+        status: calculateItemStatus(values.quantity, values.reorderPoint),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         userId: user.uid,
-      });
+      };
+      console.log('Processed item data:', newItem);
 
+      await addItem(newItem);
       toast({
         title: "Success",
-        description: `${values.name} has been added to your inventory.`,
+        description: "Item added successfully",
       });
-
-      form.reset();
       onOpenChange(false);
+      form.reset();
     } catch (error) {
+      console.error("Error adding item:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to add item.",
+        description: "Failed to add item. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Item</DialogTitle>
           <DialogDescription>
@@ -135,126 +115,89 @@ export function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Product Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter product name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Name</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
+                      <Input placeholder="Enter product name" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      {DEFAULT_CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter category" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Quantity</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="reorderPoint"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Threshold</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Minimum stock level before alerts are triggered. For new products without sales history, 
+                      you need to set this manually. After recording at least 2 sales, the prediction model 
+                      will automatically calculate optimal thresholds based on your sales patterns.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
-              name="stock"
+              name="unit"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Current Stock</FormLabel>
+                  <FormLabel>Unit</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" {...field} />
+                    <Input placeholder="e.g., pcs, kg" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Unit Price</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      step="0.01"
-                      placeholder="0.00" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Price per unit for inventory valuation
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="threshold"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Threshold</FormLabel>
-                  <FormControl>
-                    <Input type="number" min="0" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Minimum stock level before alerts are triggered. For new products without sales history, 
-                    you need to set this manually. After recording at least 2 sales, the prediction model 
-                    will automatically calculate optimal thresholds based on your sales patterns.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="demand"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Predicted Demand (Optional)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      {...field} 
-                      value={field.value || ""}
-                      onChange={(e) => {
-                        const value = e.target.value === "" ? undefined : parseInt(e.target.value, 10);
-                        field.onChange(value);
-                      }}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Leave blank to use ML prediction based on threshold
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
+
+            <DialogFooter className="pt-3">
               <Button
                 type="button"
                 variant="outline"
@@ -262,8 +205,8 @@ export function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting && (
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Add Item

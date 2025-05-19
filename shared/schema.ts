@@ -22,10 +22,14 @@ export const inventoryItems = pgTable("inventory_items", {
   userId: text("user_id").notNull(),
   name: text("name").notNull(),
   category: text("category").notNull(),
-  stock: integer("stock").notNull(),
-  threshold: integer("threshold").notNull(),
-  demand: integer("demand"),
+  quantity: integer("quantity").notNull(),
+  reorderPoint: integer("reorder_point").notNull(),
+  unit: text("unit").notNull(),
+  location: text("location").notNull(),
+  supplier: text("supplier").notNull(),
+  notes: text("notes"),
   status: text("status").notNull(),
+  demand: integer("demand"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -34,6 +38,8 @@ export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  demand: z.number().nullable().optional()
 });
 
 // Sales history model for demand prediction
@@ -72,3 +78,26 @@ export type InsertSalesHistory = z.infer<typeof insertSalesHistorySchema>;
 
 export type CategoryThreshold = typeof categoryThresholds.$inferSelect;
 export type InsertCategoryThreshold = z.infer<typeof insertCategoryThresholdSchema>;
+
+export interface Prediction {
+  id: number;
+  itemId: number;
+  userId: string;
+  predictedQuantity: number;
+  actualQuantity: number | null;
+  predictionDate: Date;
+  targetDate: Date;
+  accuracy: number | null;
+  mae: number | null;
+  rmse: number | null;
+  mape: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface InsertPrediction {
+  itemId: number;
+  userId: string;
+  predictedQuantity: number;
+  targetDate: Date;
+}
