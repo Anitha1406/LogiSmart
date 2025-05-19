@@ -102,20 +102,17 @@ export function Sidebar({ isMobile, isOpen, onCloseSidebar }: SidebarProps) {
               key={item.href}
               href={item.href}
               onClick={isMobile ? onCloseSidebar : undefined}
+              className={cn(
+                "flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700",
+                {
+                  "bg-primary-50 text-primary-600 dark:bg-gray-700 dark:text-primary-400":
+                    location === item.href || 
+                    (item.href === "/" && location === ""),
+                }
+              )}
             >
-              <a
-                className={cn(
-                  "flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700",
-                  {
-                    "bg-primary-50 text-primary-600 dark:bg-gray-700 dark:text-primary-400":
-                      location === item.href || 
-                      (item.href === "/" && location === ""),
-                  }
-                )}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </a>
+              {item.icon}
+              <span>{item.label}</span>
             </Link>
           ))}
         </div>
